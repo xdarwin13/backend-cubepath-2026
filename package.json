@@ -9,6 +9,9 @@
     "start": "node dist/index.js",
     "seed": "ts-node src/utils/seed.ts"
   },
+  "engines": {
+    "node": ">=20.9.0"
+  },
   "keywords": [],
   "author": "",
   "license": "ISC",
