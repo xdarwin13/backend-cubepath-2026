@@ -1,0 +1,151 @@
+import { Response } from 'express';
+import { AuthRequest } from '../middlewares/auth';
+import { Course, Module, Lesson, Enrollment, User } from '../models';
+import { CourseStatus } from '../models/Course';
+
+export const getPublishedCourses = async (req: AuthRequest, res: Response): Promise<void> => {
+  try {
+    const { category, search } = req.query;
+    const where: any = { status: CourseStatus.PUBLISHED };
+
+    if (category) where.category = category;
+
+    const courses = await Course.findAll({
+      where,
+      include: [
+        { model: User, as: 'teacher', attributes: ['id', 'name', 'avatar'] },
+        { model: Module, as: 'modules', attributes: ['id'] },
+        { model: Enrollment, as: 'enrollments', attributes: ['id'] },
+      ],
+      order: [['createdAt', 'DESC']],
+    });
+
+    let result = courses;
+    if (search) {
+      const s = (search as string).toLowerCase();
+      result = courses.filter(
+        (c) =>
+          c.title.toLowerCase().includes(s) ||
+          c.description.toLowerCase().includes(s)
+      );
+    }
+
+    res.json({ courses: result });
+  } catch (error: any) {
+    res.status(500).json({ error: error.message || 'Error al obtener cursos' });
+  }
+};
+
+export const getCourseDetail = async (req: AuthRequest, res: Response): Promise<void> => {
+  try {
+    const course = await Course.findOne({
+      where: { id: req.params.id, status: CourseStatus.PUBLISHED },
+      include: [
+        { model: User, as: 'teacher', attributes: ['id', 'name', 'avatar'] },
+        {
+          model: Module,
+          as: 'modules',
+          include: [{ model: Lesson, as: 'lessons' }],
+        },
+      ],
+      order: [
+        [{ model: Module, as: 'modules' }, 'order', 'ASC'],
+        [{ model: Module, as: 'modules' }, { model: Lesson, as: 'lessons' }, 'order', 'ASC'],
+      ],
+    });
+
+    if (!course) {
+      res.status(404).json({ error: 'Curso no encontrado' });
+      return;
+    }
+
+    // Check if the student is enrolled
+    let enrollment = null;
+    if (req.user) {
+      enrollment = await Enrollment.findOne({
+        where: { studentId: req.user.id, courseId: course.id },
+      });
+    }
+
+    res.json({ course, enrollment });
+  } catch (error: any) {
+    res.status(500).json({ error: error.message || 'Error al obtener curso' });
+  }
+};
+
+export const enrollInCourse = async (req: AuthRequest, res: Response): Promise<void> => {
+  try {
+    const course = await Course.findOne({
+      where: { id: req.params.id, status: CourseStatus.PUBLISHED },
+    });
+
+    if (!course) {
+      res.status(404).json({ error: 'Curso no encontrado' });
+      return;
+    }
+
+    const existing = await Enrollment.findOne({
+      where: { studentId: req.user.id, courseId: course.id },
+    });
+
+    if (existing) {
+      res.status(400).json({ error: 'Ya estas inscrito en este curso' });
+      return;
+    }
+
+    const enrollment = await Enrollment.create({
+      studentId: req.user.id,
+      courseId: course.id,
+    });
+
+    res.status(201).json({ enrollment });
+  } catch (error: any) {
+    res.status(500).json({ error: error.message || 'Error al inscribirse' });
+  }
+};
+
+export const getMyCourses = async (req: AuthRequest, res: Response): Promise<void> => {
+  try {
+    const enrollments = await Enrollment.findAll({
+      where: { studentId: req.user.id },
+      include: [
+        {
+          model: Course,
+          as: 'course',
+          include: [
+            { model: User, as: 'teacher', attributes: ['id', 'name', 'avatar'] },
+            { model: Module, as: 'modules', attributes: ['id'] },
+          ],
+        },
+      ],
+      order: [['createdAt', 'DESC']],
+    });
+
+    res.json({ enrollments });
+  } catch (error: any) {
+    res.status(500).json({ error: error.message || 'Error al obtener mis cursos' });
+  }
+};
+
+export const updateProgress = async (req: AuthRequest, res: Response): Promise<void> => {
+  try {
+    const enrollment = await Enrollment.findOne({
+      where: { id: req.params.enrollmentId, studentId: req.user.id },
+    });
+
+    if (!enrollment) {
+      res.status(404).json({ error: 'Inscripcion no encontrada' });
+      return;
+    }
+
+    const { progress } = req.body;
+    await enrollment.update({
+      progress,
+      completedAt: progress >= 100 ? new Date() : null,
+    });
+
+    res.json({ enrollment });
+  } catch (error: any) {
+    res.status(500).json({ error: error.message || 'Error al actualizar progreso' });
+  }
+};

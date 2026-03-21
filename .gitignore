@@ -1,0 +1,8 @@
+node_modules/
+dist/
+.env*
+*.log
+
+# Generated Audio and Uploads
+uploads/
+*.wav
