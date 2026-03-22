@@ -21,9 +21,9 @@ interface PexelsResponse {
   total_results: number;
 }
 
-export const searchImages = async (query: string, perPage: number = 5): Promise<PexelsPhoto[]> => {
+export const searchImages = async (query: string, perPage: number = 10): Promise<PexelsPhoto[]> => {
   const response = await fetch(
-    `${PEXELS_BASE_URL}/search?query=${encodeURIComponent(query)}&per_page=${perPage}&locale=es-ES`,
+    `${PEXELS_BASE_URL}/search?query=${encodeURIComponent(query)}&per_page=${perPage}`,
     {
       headers: {
         Authorization: env.PEXELS_API_KEY,
@@ -40,8 +40,10 @@ export const searchImages = async (query: string, perPage: number = 5): Promise<
 };
 
 export const getRandomImage = async (query: string): Promise<string | null> => {
-  const photos = await searchImages(query, 5);
+  const photos = await searchImages(query, 15);
   if (photos.length === 0) return null;
-  const randomIndex = Math.floor(Math.random() * photos.length);
+  // Pexels returns results sorted by relevance; pick from top 3 for variety while staying relevant
+  const topCount = Math.min(3, photos.length);
+  const randomIndex = Math.floor(Math.random() * topCount);
   return photos[randomIndex].src.large;
 };

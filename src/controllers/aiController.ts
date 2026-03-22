@@ -19,8 +19,8 @@ export const generateCourse = async (req: AuthRequest, res: Response): Promise<v
     // 1. Generate course outline with AI
     const outline = await groqService.generateCourseOutline(prompt);
 
-    // 2. Get cover image from Pexels
-    const coverImage = await pexelsService.getRandomImage(outline.title + ' ' + outline.category);
+    // 2. Get cover image from Pexels using AI-generated English keywords
+    const coverImage = await pexelsService.getRandomImage(outline.coverImageQuery || outline.title);
 
     // 3. Create course in DB
     const course = await Course.create({
@@ -44,8 +44,7 @@ export const generateCourse = async (req: AuthRequest, res: Response): Promise<v
 
       for (let j = 0; j < mod.lessons.length; j++) {
         const les = mod.lessons[j];
-        // Get an image for the lesson
-        const lessonImage = await pexelsService.getRandomImage(les.title);
+        const lessonImage = await pexelsService.getRandomImage(les.imageQuery || les.title);
 
         await Lesson.create({
           title: les.title,

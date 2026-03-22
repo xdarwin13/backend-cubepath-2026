@@ -9,12 +9,14 @@ export interface CourseOutline {
   title: string;
   description: string;
   category: string;
+  coverImageQuery: string;
   modules: {
     title: string;
     description: string;
     lessons: {
       title: string;
       summary: string;
+      imageQuery: string;
     }[];
   }[];
 }
@@ -31,17 +33,19 @@ Responde SOLO con un JSON valido (sin markdown, sin backticks) con esta estructu
   "title": "Titulo del curso",
   "description": "Descripcion detallada del curso (2-3 oraciones)",
   "category": "Categoria del curso (ej: programacion, matematicas, ciencias, idiomas, arte, negocios, tecnologia)",
+  "coverImageQuery": "2-4 keywords EN INGLES para buscar una foto de portada relevante en un banco de imagenes (ej: 'machine learning technology computer', 'personal finance money investment', 'digital art painting creative')",
   "modules": [
     {
       "title": "Titulo del modulo",
       "description": "Descripcion breve del modulo",
       "lessons": [
-        { "title": "Titulo de la leccion", "summary": "Resumen breve de la leccion" }
+        { "title": "Titulo de la leccion", "summary": "Resumen breve de la leccion", "imageQuery": "2-3 keywords EN INGLES para buscar una imagen relevante para esta leccion" }
       ]
     }
   ]
 }
-Genera entre 3 y 6 modulos, cada uno con 2 a 4 lecciones. El contenido debe ser educativo, bien estructurado y progresivo.`,
+Genera entre 3 y 6 modulos, cada uno con 2 a 4 lecciones. El contenido debe ser educativo, bien estructurado y progresivo.
+IMPORTANTE: Los campos "coverImageQuery" e "imageQuery" deben ser palabras clave descriptivas y visuales EN INGLES que representen bien el tema para encontrar fotos relevantes en un banco de imagenes. Piensa en que tipo de foto representaria visualmente el concepto.`,
       },
       { role: 'user', content: prompt },
     ],
