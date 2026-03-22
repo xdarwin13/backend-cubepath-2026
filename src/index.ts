@@ -13,6 +13,7 @@ import teacherRoutes from './routes/teacherRoutes';
 import studentRoutes from './routes/studentRoutes';
 import adminRoutes from './routes/adminRoutes';
 import aiRoutes from './routes/aiRoutes';
+import verifyRoutes from './routes/verifyRoutes';
 
 const app = express();
 
@@ -33,6 +34,7 @@ app.use('/api/teacher', teacherRoutes);
 app.use('/api/student', studentRoutes);
 app.use('/api/admin', adminRoutes);
 app.use('/api/ai', aiRoutes);
+app.use('/api/verify', verifyRoutes);
 
 // Health check
 app.get('/api/health', (req, res) => {

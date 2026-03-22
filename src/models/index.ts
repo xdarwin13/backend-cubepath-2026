@@ -3,6 +3,7 @@ import Course from './Course';
 import Module from './Module';
 import Lesson from './Lesson';
 import Enrollment from './Enrollment';
+import Certificate from './Certificate';
 
 // User <-> Course (Teacher has many courses)
 User.hasMany(Course, { foreignKey: 'teacherId', as: 'courses' });
@@ -24,4 +25,16 @@ Enrollment.belongsTo(User, { foreignKey: 'studentId', as: 'student' });
 Course.hasMany(Enrollment, { foreignKey: 'courseId', as: 'enrollments' });
 Enrollment.belongsTo(Course, { foreignKey: 'courseId', as: 'course' });
 
-export { User, Course, Module, Lesson, Enrollment };
+// Enrollment <-> Certificate
+Enrollment.hasOne(Certificate, { foreignKey: 'enrollmentId', as: 'certificate' });
+Certificate.belongsTo(Enrollment, { foreignKey: 'enrollmentId', as: 'enrollment' });
+
+// User <-> Certificate
+User.hasMany(Certificate, { foreignKey: 'studentId', as: 'certificates' });
+Certificate.belongsTo(User, { foreignKey: 'studentId', as: 'student' });
+
+// Course <-> Certificate
+Course.hasMany(Certificate, { foreignKey: 'courseId', as: 'certificates' });
+Certificate.belongsTo(Course, { foreignKey: 'courseId', as: 'course' });
+
+export { User, Course, Module, Lesson, Enrollment, Certificate };

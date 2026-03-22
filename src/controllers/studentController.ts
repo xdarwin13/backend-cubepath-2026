@@ -1,6 +1,6 @@
 import { Response } from 'express';
 import { AuthRequest } from '../middlewares/auth';
-import { Course, Module, Lesson, Enrollment, User } from '../models';
+import { Course, Module, Lesson, Enrollment, User, Certificate } from '../models';
 import { CourseStatus } from '../models/Course';
 import { generateQuiz } from '../services/groqService';
 
@@ -152,6 +152,69 @@ export const updateProgress = async (req: AuthRequest, res: Response): Promise<v
     res.json({ enrollment });
   } catch (error: any) {
     res.status(500).json({ error: error.message || 'Error al actualizar progreso' });
+  }
+};
+
+export const getCertificateData = async (req: AuthRequest, res: Response): Promise<void> => {
+  try {
+    const enrollment = await Enrollment.findOne({
+      where: { id: req.params.enrollmentId, studentId: req.user.id },
+      include: [
+        {
+          model: Course,
+          as: 'course',
+          include: [
+            { model: User, as: 'teacher', attributes: ['id', 'name'] },
+            { model: Module, as: 'modules', attributes: ['id'] },
+          ],
+        },
+      ],
+    });
+
+    if (!enrollment) {
+      res.status(404).json({ error: 'Inscripcion no encontrada' });
+      return;
+    }
+
+    if (enrollment.progress < 100 || !enrollment.completedAt) {
+      res.status(400).json({ error: 'El curso aun no ha sido completado' });
+      return;
+    }
+
+    const student = await User.findByPk(req.user.id, {
+      attributes: ['id', 'name', 'email'],
+    });
+
+    let certificate = await Certificate.findOne({
+      where: { enrollmentId: enrollment.id },
+    });
+
+    if (!certificate) {
+      certificate = await Certificate.create({
+        enrollmentId: enrollment.id,
+        studentId: req.user.id,
+        courseId: enrollment.courseId,
+        verificationCode: Certificate.generateVerificationCode(),
+        issuedAt: enrollment.completedAt || new Date(),
+      });
+    }
+
+    res.json({
+      certificate: {
+        id: enrollment.id,
+        verificationCode: certificate.verificationCode,
+        studentName: student?.name || 'Estudiante',
+        studentEmail: student?.email,
+        courseTitle: (enrollment as any).course?.title,
+        teacherName: (enrollment as any).course?.teacher?.name,
+        totalModules: (enrollment as any).course?.modules?.length || 0,
+        completedAt: enrollment.completedAt,
+        enrolledAt: enrollment.createdAt,
+        issuedAt: certificate.issuedAt,
+      },
+    });
+  } catch (error: any) {
+    res.status(500).json({ error: error.message || 'Error al obtener certificado' });
   }
 };
 

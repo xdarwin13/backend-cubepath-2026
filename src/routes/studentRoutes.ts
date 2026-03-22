@@ -6,6 +6,7 @@ import {
   enrollInCourse,
   getMyCourses,
   updateProgress,
+  getCertificateData,
   generateLessonQuiz,
 } from '../controllers/studentController';
 
@@ -18,6 +19,7 @@ router.get('/courses/:id', getCourseDetail);
 router.post('/courses/:id/enroll', enrollInCourse);
 router.get('/my-courses', getMyCourses);
 router.put('/progress/:enrollmentId', updateProgress);
+router.get('/certificate/:enrollmentId', getCertificateData);
 router.post('/quiz/lesson/:lessonId', generateLessonQuiz);
 
 export default router;
