@@ -6,6 +6,7 @@ import {
   enrollInCourse,
   getMyCourses,
   updateProgress,
+  generateLessonQuiz,
 } from '../controllers/studentController';
 
 const router = Router();
@@ -17,5 +18,6 @@ router.get('/courses/:id', getCourseDetail);
 router.post('/courses/:id/enroll', enrollInCourse);
 router.get('/my-courses', getMyCourses);
 router.put('/progress/:enrollmentId', updateProgress);
+router.post('/quiz/lesson/:lessonId', generateLessonQuiz);
 
 export default router;

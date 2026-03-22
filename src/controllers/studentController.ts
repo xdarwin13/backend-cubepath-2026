@@ -2,6 +2,7 @@ import { Response } from 'express';
 import { AuthRequest } from '../middlewares/auth';
 import { Course, Module, Lesson, Enrollment, User } from '../models';
 import { CourseStatus } from '../models/Course';
+import { generateQuiz } from '../services/groqService';
 
 export const getPublishedCourses = async (req: AuthRequest, res: Response): Promise<void> => {
   try {
@@ -138,14 +139,39 @@ export const updateProgress = async (req: AuthRequest, res: Response): Promise<v
       return;
     }
 
-    const { progress } = req.body;
-    await enrollment.update({
+    const { progress, lastLessonId } = req.body;
+    const updateData: any = {
       progress,
       completedAt: progress >= 100 ? new Date() : null,
-    });
+    };
+    if (lastLessonId) {
+      updateData.lastLessonId = lastLessonId;
+    }
+    await enrollment.update(updateData);
 
     res.json({ enrollment });
   } catch (error: any) {
     res.status(500).json({ error: error.message || 'Error al actualizar progreso' });
+  }
+};
+
+export const generateLessonQuiz = async (req: AuthRequest, res: Response): Promise<void> => {
+  try {
+    const lesson = await Lesson.findByPk(req.params.lessonId as string);
+    if (!lesson) {
+      res.status(404).json({ error: 'Leccion no encontrada' });
+      return;
+    }
+
+    if (!lesson.content || lesson.content.length < 20) {
+      res.status(400).json({ error: 'La leccion no tiene suficiente contenido para generar un quiz' });
+      return;
+    }
+
+    const questions = await generateQuiz(lesson.content, lesson.title);
+    res.json({ questions });
+  } catch (error: any) {
+    console.error('Error generating quiz:', error);
+    res.status(500).json({ error: error.message || 'Error al generar quiz' });
   }
 };
