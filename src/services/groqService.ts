@@ -62,8 +62,13 @@ IMPORTANTE: Los campos "coverImageQuery" e "imageQuery" deben ser palabras clave
 export const generateLessonContent = async (
   lessonTitle: string,
   moduleTitle: string,
-  courseTitle: string
+  courseTitle: string,
+  youtubeVideosContext?: string
 ): Promise<string> => {
+  const youtubeInstruction = youtubeVideosContext
+    ? `\n- IMPORTANTE: Se te proporcionan links de videos de YouTube relevantes. DEBES incluirlos en el contenido de manera natural, colocando cada URL de YouTube en su propia linea, separada por lineas vacias arriba y abajo. Esto permite que el sistema los renderice como videos embebidos. Colocalos donde sean mas utiles didacticamente (despues de explicar un concepto, como ejemplo visual, etc).`
+    : '';
+
   const response = await groq.chat.completions.create({
     model: TEXT_MODEL,
     messages: [
@@ -75,12 +80,12 @@ El contenido debe ser:
 - Bien estructurado con titulos, subtitulos, listas y ejemplos
 - Con explicaciones claras y progresivas
 - Incluir ejemplos practicos cuando sea relevante
-- NO incluir el titulo de la leccion como encabezado principal (ya se muestra por separado)
+- NO incluir el titulo de la leccion como encabezado principal (ya se muestra por separado)${youtubeInstruction}
 Responde SOLO con el contenido en Markdown.`,
       },
       {
         role: 'user',
-        content: `Curso: "${courseTitle}"\nModulo: "${moduleTitle}"\nLeccion: "${lessonTitle}"\n\nGenera el contenido completo de esta leccion.`,
+        content: `Curso: "${courseTitle}"\nModulo: "${moduleTitle}"\nLeccion: "${lessonTitle}"\n\nGenera el contenido completo de esta leccion.${youtubeVideosContext || ''}`,
       },
     ],
     temperature: 0.7,

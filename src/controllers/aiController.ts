@@ -3,6 +3,7 @@ import { AuthRequest } from '../middlewares/auth';
 import { Course, Module, Lesson } from '../models';
 import * as groqService from '../services/groqService';
 import * as pexelsService from '../services/pexelsService';
+import * as youtubeService from '../services/youtubeService';
 import { CourseStatus } from '../models/Course';
 import path from 'path';
 import fs from 'fs';
@@ -100,10 +101,16 @@ export const generateLessonContent = async (req: AuthRequest, res: Response): Pr
     const module = (lesson as any).module;
     const course = module.course;
 
+    // Search for relevant YouTube videos
+    const searchQuery = `${lesson.title} ${course.title} tutorial`;
+    const videos = await youtubeService.searchYouTubeVideos(searchQuery, 3);
+    const youtubeContext = youtubeService.buildYouTubeContext(videos);
+
     const content = await groqService.generateLessonContent(
       lesson.title,
       module.title,
-      course.title
+      course.title,
+      youtubeContext
     );
 
     await lesson.update({ content });

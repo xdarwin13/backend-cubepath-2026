@@ -17,5 +17,7 @@ export const env = {
   GROQ_API_KEY: process.env.GROQ_API_KEY || '',
   PEXELS_API_KEY: process.env.PEXELS_API_KEY || '',
 
+  YOUTUBE_API_KEY: process.env.YOUTUBE_API_KEY || '',
+
   FRONTEND_URL: process.env.FRONTEND_URL || 'http://localhost:3000',
 };
